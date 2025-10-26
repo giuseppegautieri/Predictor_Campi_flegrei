@@ -1,7 +1,3 @@
-# ===================================================================
-# PASSO 0: IMPORTAZIONI E IMPOSTAZIONI GLOBALI
-# ===================================================================
-# Importazioni di base per la manipolazione dati e la visualizzazione
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,49 +6,37 @@ import requests
 from functools import reduce
 from datetime import datetime, timedelta
 
-# Importazioni per la preparazione dei dati e la valutazione da Scikit-learn
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
 
-# Importazioni per il modello di Deep Learning con TensorFlow/Keras
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, MaxPooling1D, LSTM, Dense, Dropout, Input, BatchNormalization, LayerNormalization
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 
-# Importazioni per l'acquisizione dati sismologici
 try:
     from obspy import UTCDateTime
     from obspy.clients.fdsn import Client
     print("ObsPy importato con successo.")
 except ImportError:
     print("ATTENZIONE: obspy non trovato. Tentativo di installazione...")
-    # Questo blocco è per ambienti come Kaggle/Colab dove le installazioni non sono persistenti
     import sys
-    #!{sys.executable} -m pip install "obspy==1.4.2" lxml --quiet
     from obspy import UTCDateTime
     from obspy.clients.fdsn import Client
     print("ObsPy installato e importato.")
 
 
-# --- Impostazioni dell'Esperimento ---
 TIME_WINDOW_DAYS = 30
 MAGNITUDE_THRESHOLD = 3.5
 PREDICTION_HORIZON_DAYS = 7
 SEQUENCE_LENGTH = 30
 
-# --- Parametri per l'acquisizione dati ---
 DATA_CENTER_CLIENT = "INGV"
 START_DATE_ANALYSIS = "2024-07-01"
-# Coordinate Geografiche Precise per i Campi Flegrei
 MIN_LAT, MAX_LAT = 40.78, 40.87
 MIN_LON, MAX_LON = 14.05, 14.27
 
-
-# ===================================================================
-# PASSO 1: ACQUISIZIONE DATI SISMICI "ON-DEMAND"
-# ===================================================================
 print("--- [PASSO 1] Acquisizione Dati Sismici 'On-Demand' ---")
 try:
     client = Client(DATA_CENTER_CLIENT)
@@ -60,7 +44,6 @@ try:
     end_time_utc = UTCDateTime(datetime.utcnow())
     print(f"Richiesta dati sismici dal {start_time_utc.date.isoformat()} a oggi...")
 
-    # La chiamata standard che usa il formato QuakeML
     catalog = client.get_events(
         starttime=start_time_utc, endtime=end_time_utc,
         minlatitude=MIN_LAT, maxlatitude=MAX_LAT,
@@ -69,7 +52,6 @@ try:
     
     print(f"Trovati {len(catalog)} eventi nel catalogo.")
 
-    # Processa l'oggetto Catalog
     events_data = []
     for event in catalog:
         origin = event.preferred_origin() or event.origins[0]
@@ -91,15 +73,11 @@ except Exception as e:
     print(f"ERRORE critico durante il download dei dati sismici: {e}. Impossibile continuare.")
     exit()
 
-# Pulizia finale del DataFrame sismico
 df_sismic = df_sismic.dropna().sort_values(by='time').reset_index(drop=True)
 print(f"Dati sismici pronti: {len(df_sismic)} eventi validi.")
 print("--------------------------------------------------\n")
 
 
-# ===================================================================
-# PASSO 2: FEATURE ENGINEERING SISMICO
-# ===================================================================
 print("--- [PASSO 2] Feature Engineering Sismico ---")
 def calculate_energy(magnitude): return 10**(1.5 * magnitude + 4.8)
 features_list = []
@@ -120,46 +98,33 @@ print(f"Creato dataset di features sismiche per {len(features_df)} giorni.")
 print("--------------------------------------------------\n")
 
 
-# ===================================================================
-# PASSO 2.5: INTEGRAZIONE DATI GNSS (DEFORMAZIONE SUOLO)
-# ===================================================================
 print("--- [PASSO 2.5] Integrazione Dati GNSS (Deformazione Suolo) ---")
-# --- MODIFICA CHIAVE: LA TUA LISTA DI STAZIONI VERIFICATE ---
-# Inserisci qui i codici delle 5 stazioni che hai trovato.
-# Questo è solo un esempio, sostituiscilo con i tuoi codici reali.
-stazioni_da_usare = ["TAI1", "MAFE", "NAPO", "FRUL", "POIS"] # ESEMPIO: Sostituisci con le tue stazioni
-# --- FINE MODIFICA ---
+stazioni_da_usare = ["TAI1", "MAFE", "NAPO", "FRUL", "POIS"] 
 
 try:
     print(f"Verrà tentato il download dei dati per le seguenti stazioni: {stazioni_da_usare}")
 
     lista_df_gnss = []
-    # Ciclo per scaricare i dati di ogni stazione nella tua lista
     for stazione in stazioni_da_usare:
-        # Costruisce l'URL specifico per ogni stazione
         url_gnss = f"https://geodesy.unr.edu/gps_timeseries/tenv3_loadpredictions/{stazione}.tenv3"
         
         try:
             print(f"Download e parsing dei dati per la stazione '{stazione}'...")
             
             response_stazione = requests.get(url_gnss)
-            response_stazione.raise_for_status() # Controlla se la richiesta HTTP ha avuto successo
-            
+            response_stazione.raise_for_status() 
             data_rows = []
-            lines = response_stazione.text.splitlines() # Divide il contenuto del file in righe
+            lines = response_stazione.text.splitlines() 
             
-            # Ciclo per processare ogni riga del file di testo
-            for line in lines[1:]: # !!! INIZIAMO DALLA SECONDA RIGA PER SALTARE L'INTESTAZIONE MANUALE !!!
-                if not line.strip(): # Salta righe vuote
+            for line in lines[1:]: 
+                if not line.strip(): 
                     continue
 
-                parts = line.split() # Dividi la riga in base agli spazi
+                parts = line.split() 
                 
-                # Controlla che la riga abbia abbastanza colonne (almeno 11 per avere data e up)
                 if len(parts) > 8: 
-                    # Estrae la data (colonna 2, indice 1) e la componente verticale (colonna 11, indice 10)
                     date_str = parts[1]
-                    up_component = float(parts[8]) # La componente 'up' è alla 9a colonna (indice 8)
+                    up_component = float(parts[8]) 
                     data_rows.append({'date_str': date_str, f'sollevamento_{stazione}': up_component})
 
             if not data_rows:
@@ -167,15 +132,14 @@ try:
                 continue
                 
             df_stazione = pd.DataFrame(data_rows)
-            # Converti la colonna della data nel formato corretto (es. '08JUL04')
             df_stazione['date'] = pd.to_datetime(df_stazione['date_str'], format='%y-%b-%d', errors='coerce')
-            df_stazione = df_stazione.dropna().drop(columns=['date_str']) # Rimuovi righe con data non valida e la colonna stringa temporanea
+            df_stazione = df_stazione.dropna().drop(columns=['date_str']) 
             lista_df_gnss.append(df_stazione)
             print(f"Dati per la stazione '{stazione}' processati con successo.")
             
         except requests.exceptions.HTTPError as http_err:
              print(f"ATTENZIONE: Impossibile trovare i dati per la stazione '{stazione}' (Errore HTTP: {http_err}). La stazione verrà saltata.")
-        except ValueError as ve: # Cattura specificamente errori di formato dati
+        except ValueError as ve:
              print(f"ATTENZIONE: Errore di parsing per la stazione '{stazione}': {ve}. Potrebbe essere un problema con i dati di quella stazione o con le colonne selezionate. Verrà saltata.")
         except Exception as e:
             print(f"ATTENZIONE: Errore generico nel processare la stazione '{stazione}': {e}. La stazione verrà saltata.")
@@ -183,40 +147,27 @@ try:
     if not lista_df_gnss:
         raise ValueError("Nessun dato GNSS valido è stato scaricato da nessuna delle stazioni specificate. Impossibile procedere.")
 
-    # --- Unione dei dati di tutte le stazioni scaricate con successo ---
-    # Usa reduce per unire tutti i DataFrame in lista_df_gnss in uno unico
     df_gnss_completo = reduce(lambda left, right: pd.merge(left, right, on='date', how='outer'), lista_df_gnss)
     df_gnss_completo = df_gnss_completo.sort_values(by='date').reset_index(drop=True)
     
-    # --- Interpolazione dei dati GNSS ---
-    # Applica l'interpolazione temporale a tutte le colonne di sollevamento
     for col in df_gnss_completo.columns:
-        if col != 'date': # Assicurati di non interpolare la colonna 'date'
+        if col != 'date':
             df_gnss_completo[col] = df_gnss_completo[col].interpolate(method='time')
     
-    # Riempie eventuali valori NaN rimasti (es. all'inizio o alla fine della serie)
     df_gnss_completo = df_gnss_completo.fillna(method='ffill').fillna(method='bfill')
     print("Dati da tutte le stazioni GNSS disponibili uniti e puliti.")
 
-    # --- Unione con il DataFrame delle features sismiche ---
     features_df['date'] = pd.to_datetime(features_df['date'])
     features_df_arricchito = pd.merge(features_df, df_gnss_completo, on='date', how='left')
 
-    # --- Creazione di Features di Deformazione ---
     print("Creazione features di deformazione...")
     colonne_sollevamento = [col for col in features_df_arricchito.columns if col.startswith('sollevamento_')]
-    
-    # Media del sollevamento tra tutte le stazioni GNSS
+
     features_df_arricchito['sollevamento_medio_caldera'] = features_df_arricchito[colonne_sollevamento].mean(axis=1)
-    
-    # Velocità media di sollevamento (derivata)
+
     features_df_arricchito['velocita_media_sollevamento_7d'] = features_df_arricchito['sollevamento_medio_caldera'].diff(periods=7)
     
-    # --- Pulizia Finale ---
-    # Manteniamo le colonne individuali per il modello (se si vuole sperimentare)
-    # Altrimenti si potrebbero droppare per avere meno features. Per ora le teniamo.
-    # Riempiamo eventuali NaN rimasti (es. se una stazione non ha dati in un certo periodo)
-    features_df = features_df_arricchito.fillna(0) # Riempiamo con 0 i NaN, presumendo assenza di misura = assenza di deformazione
+    features_df = features_df_arricchito.fillna(0) 
     
     print("Nuove features di deformazione (basate su più stazioni) create e aggiunte.")
     print("Anteprima del dataset arricchito:")
@@ -226,18 +177,11 @@ try:
 
 except Exception as e:
     print(f"ATTENZIONE: Fallimento critico nel blocco di integrazione dati GNSS: {e}. Il modello userà solo i dati sismici.")
-    # In caso di qualsiasi errore nel download/processamento GNSS, continuiamo solo con i dati sismici
-    # Assicurandoci che le colonne per le features GNSS esistano comunque per evitare errori successivi
     features_df['sollevamento_medio_caldera'] = 0
     features_df['velocita_media_sollevamento_7d'] = 0
-    # Se ci fossero altre features GNSS, aggiungerle qui a 0
 
 print("--------------------------------------------------\n")
 
-
-# ===================================================================
-# PASSO 3: CREAZIONE TARGET E PREPARAZIONE DATI SEQUENZIALI
-# ===================================================================
 print("--- [PASSO 3] Creazione Variabile Target e Preparazione Dati Sequenziali ---")
 target_list = []
 for index, row in features_df.iterrows():
@@ -260,10 +204,6 @@ X_sequences = np.array(X_sequences); y_sequences = np.array(y_sequences)
 print(f"\nTrasformazione in sequenze completata. Formato dati input: {X_sequences.shape}")
 print("--------------------------------------------------\n")
 
-
-# ===================================================================
-# PASSO 4: COSTRUZIONE E ADDESTRAMENTO DEL MODELLO
-# ===================================================================
 print("--- [PASSO 4] Costruzione e Addestramento del Modello Ibrido CNN-LSTM ---")
 X_train, X_test, y_train, y_test = train_test_split(
     X_sequences, y_sequences, test_size=0.20, random_state=42, stratify=y_sequences
@@ -300,10 +240,6 @@ history = model_cnn_lstm.fit(
 print("Addestramento completato.")
 print("--------------------------------------------------\n")
 
-
-# ===================================================================
-# PASSO 5: VALUTAZIONE E STIMA FUTURA
-# ===================================================================
 print("--- [PASSO 5] Valutazione e Stima Futura con Modello Multi-Fisico ---")
 results = model_cnn_lstm.evaluate(X_test, y_test, verbose=0)
 print("Risultati Finali sul Test Set:")
