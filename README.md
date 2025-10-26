@@ -51,7 +51,7 @@ Per eseguire questo progetto localmente, segui questi passi:
 Clona il repository:
 code
 Bash
-git 
+git https://github.com/giuseppegautieri/Predictor_Campi_flegrei/tree/main
 cd NOME_REPOSITORY
 Crea un ambiente virtuale (consigliato):
 code
