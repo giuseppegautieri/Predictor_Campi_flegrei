@@ -82,6 +82,9 @@ Questa struttura ibrida permette di catturare sia le micro-correlazioni sia le m
     ```bash
     # Clona il progetto sul tuo computer locale
     git clone https://github.com/giuseppegautieri/Predictor_Campi_flegrei.git
+    ```
+    ```bash
+    # Entra nella cartella
     cd Predictor_Campi_flegrei
     ```
 
@@ -89,6 +92,9 @@ Questa struttura ibrida permette di catturare sia le micro-correlazioni sia le m
     ```bash
     # Crea un ambiente isolato per le dipendenze
     python -m venv venv
+    ```
+    ```bash
+    # Attiva l'ambiente dopo averlo creato
     source venv/bin/activate  # Su Windows: venv\Scripts\activate
     ```
 
