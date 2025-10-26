@@ -1,7 +1,5 @@
 Previsione Sismica ai Campi Flegrei con Modello Ibrido CNN-LSTM
-![alt text](https://www.ingv.it/stampa-e-comunicazione/comunicati-stampa/5135-campi-flegrei-nuovo-studio-sui-meccanismi-di-risalita-del-magma/@@images/58b02da2-1262-4b2a-b605-64539acab2d2.jpeg)
 
-Immagine: INGV
 Progetto sperimentale per la previsione a breve termine del rischio sismico nella caldera dei Campi Flegrei, utilizzando un modello di Deep Learning multi-fisico che integra dati sismici e di deformazione del suolo.
 📜 Indice
 Contesto e Motivazione
@@ -53,7 +51,7 @@ Per eseguire questo progetto localmente, segui questi passi:
 Clona il repository:
 code
 Bash
-git clone https://github.com/TUO_USERNAME/NOME_REPOSITORY.git
+git 
 cd NOME_REPOSITORY
 Crea un ambiente virtuale (consigliato):
 code
