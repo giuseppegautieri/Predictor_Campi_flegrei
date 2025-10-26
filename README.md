@@ -1,107 +1,133 @@
-Previsione Sismica ai Campi Flegrei con Modello Ibrido CNN-LSTM
+# Previsione Sismica ai Campi Flegrei con Deep Learning
 
-Progetto sperimentale per la previsione a breve termine del rischio sismico nella caldera dei Campi Flegrei, utilizzando un modello di Deep Learning multi-fisico che integra dati sismici e di deformazione del suolo.
-📜 Indice
-Contesto e Motivazione
-Obiettivo del Progetto
-✨ Caratteristiche Principali
-🔧 Pipeline del Progetto
-🧠 Architettura del Modello
-🛠️ Stack Tecnologico
-⚙️ Installazione e Setup
-▶️ Come Eseguire lo Script
-📊 Interpretazione dei Risultati
-⚠️ Disclaimer Importante
-🚀 Sviluppi Futuri
-🙏 Ringraziamenti
-🌍 Contesto e Motivazione
-I Campi Flegrei sono una caldera vulcanica attiva situata a ovest di Napoli, una delle aree a più alto rischio vulcanico al mondo a causa della sua intensa urbanizzazione. L'area è soggetta al fenomeno del bradisismo: un lento sollevamento e abbassamento del suolo accompagnato da un'intensa attività sismica a bassa magnitudo.
-Dal 2005, è in corso una nuova fase di sollevamento che ha causato un'escalation della sismicità, generando preoccupazione tra la popolazione e le autorità. Questo progetto nasce come un'esplorazione accademica per verificare se le moderne tecniche di intelligenza artificiale possano contribuire a identificare pattern precursori di eventi sismici di magnitudo "rilevante" (M ≥ 3.5), affiancando i sistemi di monitoraggio tradizionali.
-🎯 Obiettivo del Progetto
-L'obiettivo è sviluppare un modello di classificazione binaria in grado di stimare la probabilità che si verifichi almeno un evento sismico di magnitudo superiore a una soglia definita (MAGNITUDE_THRESHOLD = 3.5) entro un orizzonte temporale futuro di 7 giorni (PREDICTION_HORIZON_DAYS).
-Il modello non si basa solo sulla sismicità passata, ma adotta un approccio multi-fisico, integrando anche i dati sulla deformazione del suolo (GNSS), un parametro fisico fondamentale per descrivere la dinamica del sistema vulcanico.
-✨ Caratteristiche Principali
-Acquisizione Dati On-Demand: Lo script si collega direttamente ai server dell'INGV e del UNR per scaricare i dati più recenti, garantendo un'analisi sempre aggiornata.
-Approccio Multi-Fisico: Fusione di dati sismologici (magnitudo, frequenza, energia) e dati geodetici (sollevamento del suolo) per una visione d'insieme più completa.
-Feature Engineering Avanzato: Calcolo di parametri sismologici significativi come il b-value e la velocità di deformazione per catturare le dinamiche del sottosuolo.
-Modello Ibrido Deep Learning: Utilizzo di una rete CNN-LSTM per estrarre feature spaziali locali dalle serie temporali e modellarne le dipendenze a lungo termine.
-Gestione Classi Sbilanciate: Implementazione di class_weight per gestire la rarità degli eventi sismici rilevanti e addestrare un modello più robusto.
-Pipeline End-to-End: Il progetto copre l'intero ciclo di vita: acquisizione dati, pre-processing, training, valutazione e stima predittiva finale.
-🔧 Pipeline del Progetto
-Il processo è suddiviso in 5 passi logici e automatizzati:
-Acquisizione Dati Sismici: Download del catalogo eventi sismici dall'INGV per l'area dei Campi Flegrei.
-Feature Engineering Sismico: Creazione di una serie temporale giornaliera con features aggregate (es. n° eventi, max magnitudo, energia, b-value) su una finestra mobile di 30 giorni.
-Integrazione Dati GNSS: Download e processamento dei dati di sollevamento del suolo da stazioni GNSS multiple. Creazione di feature aggregate come il sollevamento medio della caldera e la sua velocità.
-Preparazione Dati per il Modello: Creazione della variabile target, scaling delle features e trasformazione del dataset in sequenze temporali adatte per il modello LSTM.
-Addestramento e Valutazione: Costruzione, compilazione e addestramento del modello CNN-LSTM. Valutazione delle performance su un test set tramite matrice di confusione e classification report.
-Stima Futura: Utilizzo dell'ultima sequenza di dati disponibili per generare una stima probabilistica per i successivi 7 giorni.
-🧠 Architettura del Modello
-Il modello ibrido è progettato per sfruttare i punti di forza di due architetture complementari:
-Conv1D (Strato Convoluzionale): Agisce come un estrattore di feature. Analizza la sequenza di input per identificare pattern locali e interazioni tra le diverse features (es. una rapida accelerazione del sollevamento che coincide con un calo del b-value).
-LSTM (Long Short-Term Memory): Riceve le feature estratte dalla CNN e modella le dipendenze temporali a lungo termine. Questo permette al modello di "ricordare" trend e pattern che si sviluppano su più giorni o settimane.
-Dense (Strati Finali): Interpretano l'output della LSTM per produrre la classificazione finale (probabilità di evento).
-🛠️ Stack Tecnologico
-Data Analysis & Processing: Pandas, NumPy, Scikit-learn
-Deep Learning: TensorFlow, Keras
-Acquisizione Dati Sismici: ObsPy
-Richieste HTTP: requests
-Visualizzazione: Matplotlib, Seaborn
-⚙️ Installazione e Setup
-Per eseguire questo progetto localmente, segui questi passi:
-Clona il repository:
-code
-Bash
-git https://github.com/giuseppegautieri/Predictor_Campi_flegrei/tree/main
-cd NOME_REPOSITORY
-Crea un ambiente virtuale (consigliato):
-code
-Bash
-python -m venv venv
-source venv/bin/activate  # Su Windows: venv\Scripts\activate
-Installa le dipendenze:
-Assicurati di avere un file requirements.txt. Se non ce l'hai, crealo con il seguente contenuto:
-code
-Txt
-pandas
-numpy
-matplotlib
-seaborn
-requests
-scikit-learn
-tensorflow
-obspy
-lxml
-Quindi, installa le librerie:
-code
-Bash
-pip install -r requirements.txt
-▶️ Come Eseguire lo Script
-Una volta completato il setup, puoi lanciare l'intera pipeline con un singolo comando:
-code
-Bash
+<p align="center">
+  <strong>Un modello ibrido (CNN-LSTM) per la stima sperimentale del rischio sismico a breve termine, basato su dati multi-fisici.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python" alt="Python Version">
+  <img src="https://img.shields.io/badge/TensorFlow-2.x-orange?style=for-the-badge&logo=tensorflow" alt="TensorFlow Version">
+  <img src="https://img.shields.io/badge/Scikit--Learn-1.x-F7931E?style=for-the-badge&logo=scikit-learn" alt="Scikit-Learn Version">
+  <img src="https://img.shields.io/badge/Status-Sperimentale-red?style=for-the-badge" alt="Project Status">
+</p>
+
+---
+
+## 📋 Indice dei Contenuti
+
+1.  [**Contesto e Motivazione**](#-contesto-e-motivazione)
+2.  [**Obiettivi del Progetto**](#-obiettivi-del-progetto)
+3.  [**La Pipeline in Dettaglio**](#-la-pipeline-in-dettaglio)
+4.  [**Architettura del Modello**](#-architettura-del-modello)
+5.  [**Setup ed Esecuzione**](#-setup-ed-esecuzione)
+6.  [**Disclaimer Fondamentale**](#️-disclaimer-fondamentale)
+7.  [**Sviluppi Futuri**](#-sviluppi-futuri)
+
+---
+
+## 🌍 Contesto e Motivazione
+
+I **Campi Flegrei** sono una caldera vulcanica attiva e densamente popolata, soggetta al fenomeno del **bradisismo**: un lento sollevamento del suolo accompagnato da un'intensa attività sismica. La recente escalation di questi fenomeni ha riacceso l'attenzione sulla necessità di strumenti di analisi avanzati.
+
+Questo progetto nasce come un'esplorazione accademica per indagare se le moderne tecniche di Deep Learning possano identificare pattern complessi nei dati geofisici, fornendo un supporto statistico e sperimentale ai sistemi di monitoraggio tradizionali.
+
+---
+
+## 🎯 Obiettivi del Progetto
+
+| Obiettivo Principale                     | Dettagli                                                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Sviluppare un Modello di Classificazione** | Prevedere la probabilità di eventi sismici (`M ≥ 3.5`) in un orizzonte temporale di **7 giorni**.        |
+| **Adottare un Approccio Multi-Fisico**     | Integrare dati **sismologici** (INGV) con dati di **deformazione del suolo** (GNSS) per una visione completa. |
+| **Creare una Pipeline End-to-End**         | Automatizzare l'intero processo, dall'acquisizione dei dati in tempo reale alla stima finale.           |
+
+---
+
+## 🔧 La Pipeline in Dettaglio
+
+La pipeline è il cuore del progetto e si articola in 4 fasi automatizzate:
+
+| Fase                     | Descrizione                                                                                                                                                                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Acquisizione Dati** | Download del catalogo sismico ufficiale dell'**INGV** e delle serie storiche di deformazione del suolo da stazioni **GNSS** selezionate.                                                                                                            |
+| **2. Feature Engineering** | Calcolo di una serie storica giornaliera con feature aggregate su 30 giorni, tra cui **energia sismica**, **b-value** (indicatore di stress) e **velocità di sollevamento** del suolo.                                                               |
+| **3. Preparazione Dati** | Creazione della variabile target (evento sì/no), standardizzazione delle feature e trasformazione del dataset in **sequenze temporali** adatte al modello LSTM.                                                                                    |
+| **4. Addestramento**     | Training del modello, valutazione su un test set e generazione della stima probabilistica finale utilizzando i dati più recenti disponibili.                                                                                                     |
+
+---
+
+## 🧠 Architettura del Modello
+
+Il modello sfrutta un'architettura ibrida per massimizzare la capacità di apprendimento dalla sequenza di dati temporali.
+
+**Flusso del Modello:**
+`Input` ➔ `Conv1D` ➔ `MaxPooling1D` ➔ `LSTM` ➔ `Dense` ➔ `Output (Probabilità)`
+
+-   **Strato `Conv1D`**: Funziona come un estrattore di feature, identificando pattern e correlazioni locali tra le variabili in piccole finestre temporali (es. 3 giorni).
+-   **Strato `LSTM`**: Modella le dipendenze temporali a lungo termine, imparando i trend che possono precedere un evento sismico significativo.
+
+Questa struttura ibrida permette di catturare sia le micro-correlazioni sia le macro-tendenze nei dati.
+
+---
+
+## 🚀 Setup ed Esecuzione
+
+### Prerequisiti
+-   Python 3.8+
+-   Git
+
+### Installazione
+
+1.  **Clona il repository:**
+    ```bash
+    # Clona il progetto sul tuo computer locale
+    git clone https://github.com/TUO_USERNAME/NOME_REPOSITORY.git
+    cd NOME_REPOSITORY
+    ```
+
+2.  **Crea e attiva un ambiente virtuale:**
+    ```bash
+    # Crea un ambiente isolato per le dipendenze
+    python -m venv venv
+    source venv/bin/activate  # Su Windows: venv\Scripts\activate
+    ```
+
+3.  **Installa le dipendenze:**
+    ```bash
+    # Installa tutte le librerie necessarie
+    pip install -r requirements.txt
+    ```
+
+### Esecuzione dello Script
+
+Per lanciare l'intera pipeline, esegui semplicemente il file principale:
+```bash
+# Esegui lo script
 python nome_del_tuo_script.py
-Lo script stamperà a console i log di ogni passo, l'architettura del modello, l'avanzamento dell'addestramento e, infine, i risultati della valutazione e la stima futura.
-📊 Interpretazione dei Risultati
-L'output finale include:
-Metriche sul Test Set: Accuracy, Precision, Recall e F1-Score per valutare le performance del modello.
-Matrice di Confusione: Mostra nel dettaglio i successi e gli errori del modello (Veri Positivi/Negativi, Falsi Positivi/Negativi).
-Stima Probabilistica: La probabilità stimata di un evento sismico rilevante nei prossimi 7 giorni.
-code
-Code
---- Stima Sperimentale per il Futuro ---
 
-Probabilità stimata di 'Nessun Evento': 85.10%
-Probabilità stimata di 'Evento Rilevante': 14.90%
+L'output mostrerà i log di ogni fase, i risultati della valutazione e la stima finale.
+```
 
-AVVISO: Questa è una stima statistica sperimentale.
-⚠️ Disclaimer Importante
-Questo progetto è un'esplorazione accademica e sperimentale e NON deve essere utilizzato per scopi operativi o di protezione civile. La previsione dei terremoti è un problema scientifico complesso e ancora irrisolto. Le stime prodotte da questo modello sono il risultato di correlazioni statistiche e non hanno valore previsionale deterministico. Non basare alcuna decisione relativa alla sicurezza personale su questi risultati.
-🚀 Sviluppi Futuri
-Integrazione di Dati Aggiuntivi: Aggiungere dati geochimici (es. composizione dei gas fumarolici) o dati satellitari (InSAR) per una visione ancora più completa.
-Ottimizzazione degli Iperparametri: Utilizzare tecniche come Keras Tuner o Optuna per trovare la configurazione ottimale del modello.
-Architetture Alternative: Sperimentare con modelli più recenti come i Transformer, che si sono dimostrati molto efficaci nell'analisi di sequenze.
-Deployment: Creare una semplice web app (es. con Streamlit o Flask) per visualizzare i dati e le previsioni in modo interattivo.
-🙏 Ringraziamenti
-Questo progetto è stato possibile grazie alla disponibilità di dati aperti forniti da:
-Istituto Nazionale di Geofisica e Vulcanologia (INGV) per i dati sismologici.
-University of Nevada, Reno (UNR) per i dati geodetici GNSS.
+---
+
+## ⚠️ Disclaimer Fondamentale
+<p align="center">
+  <strong>ATTENZIONE: QUESTO È UN PROGETTO SPERIMENTALE.</strong>
+</p>
+
+ La previsione dei terremoti è un problema scientifico irrisolto. I risultati di questo modello sono basati su correlazioni statistiche e **non hanno alcun valore previsionale deterministico** o **ufficiale**.
+ 
+ Non basare alcuna decisione relativa alla sicurezza personale o pubblica sui risultati di questo script.
+
+---
+
+## 💡 Sviluppi Futuri
+
+- [ ] **Integrazione di Dati Geochimici**: Aggiungere dati sulla composizione dei gas delle fumarole per arricchire il modello.
+- [ ] **Ottimizzazione Iperparametri**: Utilizzare Keras Tuner o Optuna per trovare la migliore configurazione del modello in modo automatico.
+- [ ] **Deployment di un'API**: Creare un endpoint (es. con FastAPI) per interrogare il modello addestrato e ottenere previsioni on-demand.
+- [ ] **Dashboard Interattiva**: Sviluppare un'interfaccia utente con Streamlit o Plotly/Dash per visualizzare i dati storici e i risultati del modello in modo interattivo.
+
+
+
+
