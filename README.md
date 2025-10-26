@@ -81,8 +81,8 @@ Questa struttura ibrida permette di catturare sia le micro-correlazioni sia le m
 1.  **Clona il repository:**
     ```bash
     # Clona il progetto sul tuo computer locale
-    git clone https://github.com/TUO_USERNAME/NOME_REPOSITORY.git
-    cd NOME_REPOSITORY
+    git clone https://github.com/giuseppegautieri/Predictor_Campi_flegrei.git
+    cd Predictor_Campi_flegrei
     ```
 
 2.  **Crea e attiva un ambiente virtuale:**
@@ -103,7 +103,7 @@ Questa struttura ibrida permette di catturare sia le micro-correlazioni sia le m
 Per lanciare l'intera pipeline, esegui semplicemente il file principale:
 ```bash
 # Esegui lo script
-python nome_del_tuo_script.py
+python predictor_near_live.py
 ```
 
 L'output mostrerà i log di ogni fase, i risultati della valutazione e la stima finale.
