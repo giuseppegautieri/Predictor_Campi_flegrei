@@ -104,9 +104,9 @@ Per lanciare l'intera pipeline, esegui semplicemente il file principale:
 ```bash
 # Esegui lo script
 python nome_del_tuo_script.py
+```
 
 L'output mostrerà i log di ogni fase, i risultati della valutazione e la stima finale.
-```
 
 ---
 
