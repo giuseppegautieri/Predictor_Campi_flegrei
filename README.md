@@ -129,11 +129,19 @@ L'output mostrerà i log di ogni fase, i risultati della valutazione e la stima 
 
 ## 💡 Sviluppi Futuri
 
-- [ ] **Integrazione di Dati Geochimici**: Aggiungere dati sulla composizione dei gas delle fumarole per arricchire il modello.
+- [ ] **Integrazione di Dati Aggiuntivi**: Aggiungere dati geochimici (es. composizione dei gas fumarolici) o dati satellitari (InSAR) per una visione ancora più completa.
 - [ ] **Ottimizzazione Iperparametri**: Utilizzare Keras Tuner o Optuna per trovare la migliore configurazione del modello in modo automatico.
+- [ ] **Architetture Alternative**: Utilizzare tecniche come Keras Tuner o Optuna per trovare la configurazione ottimale del modello.
 - [ ] **Deployment di un'API**: Creare un endpoint (es. con FastAPI) per interrogare il modello addestrato e ottenere previsioni on-demand.
 - [ ] **Dashboard Interattiva**: Sviluppare un'interfaccia utente con Streamlit o Plotly/Dash per visualizzare i dati storici e i risultati del modello in modo interattivo.
 
+---
 
+## 🙏 Ringraziamenti
+
+Questo progetto è stato possibile grazie alla disponibilità di dati aperti forniti da:
+
+- **Istituto Nazionale di Geofisica e Vulcanologia (INGV)** per i dati sismologici.
+- **University of Nevada, Reno (UNR)** per i dati geodetici GNSS.
 
 
